@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حارس النجوم الساقطة</title>
+    <style>
+        body {
+            margin: 0;
+            background: #0b0f19;
+            overflow: hidden;
+            font-family: Tahoma, sans-serif;
+            text-align: center;
+            color: white;
+        }
+        canvas {
+            background: linear-gradient(to bottom, #050515, #1a1a3a);
+            display: block;
+            margin: 0 auto;
+            touch-action: none;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="score">النقاط: 0</div>
+    <canvas id="gameCanvas" width="360" height="640"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let score = 0;
+        let basket = { x: 140, y: 550, width: 80, height: 30, color: "#00ffcc" };
+        let star = { x: Math.random() * 320, y: 0, radius: 15, speed: 3 };
+
+        // تحريك السحابة باللمس أو الماوس
+        function moveBasket(clientX) {
+            let rect = canvas.getBoundingClientRect();
+            basket.x = clientX - rect.left - basket.width / 2;
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x > canvas.width - basket.width) basket.x = canvas.width - basket.width;
+        }
+
+        canvas.addEventListener("mousemove", (e) => moveBasket(e.clientX));
+        canvas.addEventListener("touchmove", (e) => {
+            moveBasket(e.touches[0].clientX);
+            e.preventDefault();
+        }, { passive: false });
+
+        function update() {
+            // حركة النجمة للأفل
+            star.y += star.speed;
+
+            // إذا وصلت النجمة للأرض (إعادة تعيين)
+            if (star.y > canvas.height) {
+                star.y = 0;
+                star.x = Math.random() * (canvas.width - 30);
+            }
+
+            // فحص الاصطدام مع السحابة
+            if (
+                star.y + star.radius >= basket.y &&
+                star.x >= basket.x &&
+                star.x <= basket.x + basket.width
+            ) {
+                score += 10;
+                document.getElementById("score").innerText = "النقاط: " + score;
+                star.y = 0;
+                star.x = Math.random() * (canvas.width - 30);
+                star.speed += 0.2; // زيادة السرعة تدريجياً للصعوبة
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // رسم السحابة (الوعاء)
+            ctx.fillStyle = basket.color;
+            ctx.beginPath();
+            ctx.roundRect(basket.x, basket.y, basket.width, basket.height, 15);
+            ctx.fill();
+
+            // رسم النجمة
+            ctx.fillStyle = "#ffcc00";
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
